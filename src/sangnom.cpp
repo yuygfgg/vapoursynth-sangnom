@@ -17,8 +17,13 @@
 #include <algorithm>
 #include <string>
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86)
 #include <emmintrin.h>
+static const size_t sseBytes = 16;
+#endif
+
+#if defined(__ARM_NEON__)
+#include "sse2neon.h"
 static const size_t sseBytes = 16;
 #endif
 
@@ -75,7 +80,7 @@ enum class BorderMode
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86) || defined(__ARM_NEON__)
 
 static inline __m128i _mm_packus_epi32_sse2(const __m128i &v1, const __m128i &v2)
 {
@@ -642,7 +647,7 @@ inline float calculateSangNom(const float &p1, const float &p2, const float &p3)
     return sum * (float)(1.0 / 8.0);
 }
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86) || defined(__ARM_NEON__)
 
 template <BorderMode border, bool alignedLoad, bool alignedStore>
 static inline void prepareBuffersLine_sse(const uint8_t *srcp, const uint8_t *srcpn2, uint8_t *buffers[TOTAL_BUFFERS], const int w, const int bufferOffset)
@@ -841,7 +846,7 @@ static inline void prepareBuffers_c(const T *srcp, const int srcStride, const in
     }
 }
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86) || defined(__ARM_NEON__)
 
 template <BorderMode border>
 static inline void processBuffersBlock_sse(uint8_t *bufferp, const int16_t *bufferLine, const int x)
@@ -1132,7 +1137,7 @@ static inline void processBuffers_c(T *bufferp, IType *bufferLine, const int buf
     }
 }
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86) || defined(__ARM_NEON__)
 
 template <BorderMode border, bool alignedLoad, bool alignedLoadBuffer, bool alignedStore>
 static inline void finalizePlaneLine_sse(const uint8_t *srcp, const uint8_t *srcpn2, uint8_t *dstpn, uint8_t *buffers[TOTAL_BUFFERS], int bufferOffset, const int w, const int pixelStep, const float aaf)
@@ -1489,7 +1494,7 @@ static inline void finalizePlane_c(T *dstp, const int dstStride, const int w, co
 }
 
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86) || defined(__ARM_NEON__)
 
 template <typename T, typename IType>
 static inline void sangnom_sse(T *dstp, const int dstStride, const int w, const int h, SangNomData *d, int offset, int plane, T *buffers[TOTAL_BUFFERS], IType *bufferLine)
@@ -1619,7 +1624,7 @@ static const VSFrameRef *VS_CC sangnomGetFrame(int n, int activationReason, void
                             vsapi->getFrameWidth(dst, plane) * d->vi->format->bytesPerSample);
             }
 
-#ifdef VS_TARGET_CPU_X86
+#if defined(VS_TARGET_CPU_X86) || defined(__ARM_NEON__)
 
             if (d->vi->format->sampleType == stInteger) {
                 if (d->vi->format->bitsPerSample == 8)

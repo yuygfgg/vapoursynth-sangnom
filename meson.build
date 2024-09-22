@@ -41,6 +41,7 @@ cxx = meson.get_compiler('cpp')
 
 sources = [
   'src/sangnom.cpp',
+  'src/sse2neon.h',
 ]
 
 deps = [
